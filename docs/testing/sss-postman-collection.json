@@ -1,0 +1,1099 @@
+{
+  "info": {
+    "_postman_id": "f2b544a5-d6b6-4171-b7c1-01199dffdc62",
+    "name": "SSS Stablecoin API",
+    "description": "API collection for testing the Solana Stablecoin Standard (SSS) backend services, including Mint/Burn, Compliance (SSS-1 & SSS-2), Privacy (SSS-3), and Oracle.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+    "_exporter_id": "36319299"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{admin_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Admin Authentication",
+      "item": [
+        {
+          "name": "POST /admin/register - Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"securepassword\",\n    \"secretToken\": \"your-registration-secret\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/register"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/login - Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set(\"admin_token\", jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"securepassword\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/login"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health & Meta",
+      "item": [
+        {
+          "name": "GET /health - Service Health",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/health"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Stablecoin Management",
+      "item": [
+        {
+          "name": "POST /create-stablecoin - Create New Stablecoin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"preset\": \"sss2\",\n    \"name\": \"USD Black\",\n    \"symbol\": \"USDb\",\n    \"decimals\": 6,\n    \"uri\": \"https://pastebin.com/raw/SjTJzhvy\",\n    \"extensions\": {\n        \"permanentDelegate\": true,\n        \"transferHook\": true,\n        \"defaultFrozen\": false,\n        \"confidential\": false\n    },\n    \"roles\": {\n        \"minter\": \"Optional_PubKey\",\n        \"burner\": \"Optional_PubKey\",\n        \"pauser\": \"Optional_PubKey\",\n        \"blacklister\": \"Optional_PubKey\",\n        \"seizer\": \"Optional_PubKey\"\n    },\n    \"oracle\": {\n        \"enabled\": false\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/create-stablecoin",
+            "description": "Creates a new stablecoin and returns the database record along with the on-chain transaction signature."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /list-stablecoins - List All Stablecoins",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/list-stablecoins?limit=50&offset=0"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /get-stablecoin/:mintAddress - Get Specific Stablecoin",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/get-stablecoin/:mintAddress",
+            "description": "Returns detailed information about a stablecoin, including database record and real-time on-chain data (supply, roles, extensions)."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /get-stablecoin/:mintAddress/history - Get Transaction History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/get-stablecoin/:mintAddress/history",
+            "description": "Returns recent mint and burn requests for the specified stablecoin."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin & Status",
+      "item": [
+        {
+          "name": "GET /admin/status - General Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/admin/status"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/on-chain-status - On-chain Status (Direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/admin/on-chain-status"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/supply - Get Total Supply",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/admin/supply"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/dev/set-authority - Set Backend Authority (Dev)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"secretKey\": \"[1,2,3...]\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/dev/set-authority"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "PUT /admin/roles - Update Roles",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"burner\": \"Optional_PubKey\",\n    \"pauser\": \"Optional_PubKey\",\n    \"blacklister\": \"Optional_PubKey\",\n    \"seizer\": \"Optional_PubKey\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/roles"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/authority/transfer - Transfer Authority (Step 1)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"newMaster\": \"NewAuthorityPublicKey\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/authority/transfer"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/authority/accept - Accept Authority (Step 2)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/admin/authority/accept"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Minter Management",
+      "item": [
+        {
+          "name": "GET /admin/minters - List Minters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/admin/minters"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/minters - Add Minter",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"address\": \"Minter_PubKey\",\n    \"quota\": \"1000000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/minters"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /admin/minters/:address - Update Minter",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"quota\": \"2000000000\",\n    \"active\": true,\n    \"resetMinted\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/minters/:address"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /admin/minters/:address - Remove Minter",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/admin/minters/:address"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/minter-status/:walletAddress - Check Wallet Authorization",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/admin/minter-status/:walletAddress",
+            "description": "Returns a list of mint addresses where the specified wallet is an authorized minter."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/authority - Get System Authority",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/admin/authority",
+            "description": "Returns the public key of the server-side system authority."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Mint & Burn",
+      "item": [
+        {
+          "name": "POST /mint-burn/mint - Request Mint",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"recipient\": \"Enter_Recipient_PubKey\",\n    \"amount\": \"100\",\n    \"mintAddress\": \"{{mint_address}}\",\n    \"minter\": \"{{minter_address}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/mint-burn/mint"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /mint-burn/prepare-mint - Prepare Mint Transaction",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"recipient\": \"Enter_Recipient_PubKey\",\n    \"amount\": \"100\",\n    \"mintAddress\": \"{{mint_address}}\",\n    \"minter\": \"{{minter_address}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/mint-burn/prepare-mint",
+            "description": "Returns a base64 encoded transaction that can be signed by an external wallet."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /mint-burn/burn - Request Burn",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fromTokenAccount\": \"Enter_Token_Account\",\n    \"amount\": \"50\",\n    \"mintAddress\": \"{{mint_address}}\",\n    \"minter\": \"{{minter_address}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/mint-burn/burn"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /mint-burn/prepare-burn - Prepare Burn Transaction",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fromTokenAccount\": \"Enter_Token_Account\",\n    \"amount\": \"50\",\n    \"mintAddress\": \"{{mint_address}}\",\n    \"minter\": \"{{minter_address}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/mint-burn/prepare-burn",
+            "description": "Returns a base64 encoded transaction that can be signed by an external wallet."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Compliance - Pause/Unpause",
+      "item": [
+        {
+          "name": "POST /compliance/pause - Pause Protocol",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"reason\": \"Testing pause functionality\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/compliance/pause"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /compliance/unpause - Unpause Protocol",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"reason\": \"Testing complete\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/compliance/unpause"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Compliance - Freeze/Thaw (SSS-1)",
+      "item": [
+        {
+          "name": "POST /compliance/freeze - Freeze Account",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"address\": \"Enter_Account_PubKey\",\n    \"reason\": \"Emergency freeze\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/compliance/freeze"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /compliance/thaw - Thaw Account",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"address\": \"Enter_Account_PubKey\",\n    \"reason\": \"Resume operations\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/compliance/thaw"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Compliance - Blacklist (SSS-2)",
+      "item": [
+        {
+          "name": "POST /compliance/blacklist - Add to Blacklist",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"address\": \"Enter_Target_PubKey\",\n    \"reason\": \"Regulatory compliance check\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/compliance/blacklist"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /compliance/blacklist - List Blacklisted Addresses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/compliance/blacklist?mintAddress={{mint_address}}&sync=true"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /compliance/blacklist/:address - Remove from Blacklist",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/compliance/blacklist/:address"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /compliance/blacklist/:address - Check Blacklist Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/compliance/blacklist/:address"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/hook/initialize - Initialize Transfer Hook",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/admin/hook/initialize"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Compliance - Seize (SSS-2)",
+      "item": [
+        {
+          "name": "POST /compliance/seize - Seize Tokens",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fromTokenAccount\": \"Source_Account\",\n    \"toTokenAccount\": \"Treasury_Account\",\n    \"amount\": \"5000000\",\n    \"reason\": \"Asset recovery\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/compliance/seize"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Compliance - Audit",
+      "item": [
+        {
+          "name": "GET /compliance/history/:address - Get Address History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/compliance/history/:address?mintAddress={{mint_address}}",
+              "host": ["{{base_url}}"],
+              "path": ["compliance", "history", ":address"],
+              "query": [
+                {
+                  "key": "mintAddress",
+                  "value": "{{mint_address}}"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "address",
+                  "value": "Enter_Account_PubKey"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /compliance/audit - Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/compliance/audit?limit=20"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Privacy (SSS-3)",
+      "item": [
+        {
+          "name": "POST /privacy/approve - Approve Confidential Transfer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tokenAccount\": \"Enter_Token_Account\",\n    \"reason\": \"Enable privacy\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/privacy/approve"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /privacy/enable-credits - Enable Confidential Credits",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tokenAccount\": \"Enter_Token_Account\",\n    \"reason\": \"Enable credits\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/privacy/enable-credits"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /privacy/disable-credits - Disable Confidential Credits",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tokenAccount\": \"Enter_Token_Account\",\n    \"reason\": \"Disable credits\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/privacy/disable-credits"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /privacy/stats - Get Privacy Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/privacy/stats?mintAddress={{mint_address}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "privacy",
+                "stats"
+              ],
+              "query": [
+                {
+                  "key": "mintAddress",
+                  "value": "{{mint_address}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /privacy/accounts - List Approved Privacy Accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/privacy/accounts?mintAddress={{mint_address}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "privacy",
+                "accounts"
+              ],
+              "query": [
+                {
+                  "key": "mintAddress",
+                  "value": "{{mint_address}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Oracle",
+      "item": [
+        {
+          "name": "GET /admin/oracle/status - Oracle Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/admin/oracle/status"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/oracle/activity - Oracle Activity Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/admin/oracle/activity?limit=15"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/oracle/initialize - Initialize Oracle",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"baseCurrency\": \"USD\",\n    \"quoteCurrency\": \"USD\",\n    \"aggregationMethod\": \"median\",\n    \"maxStalenessSeconds\": 3600,\n    \"mintPremiumBps\": 10,\n    \"redeemDiscountBps\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/oracle/initialize"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /admin/oracle/config - Update Oracle Config",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"maxStalenessSeconds\": 7200,\n    \"aggregationMethod\": \"mean\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/oracle/config"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/oracle/feeds - Add Price Feed",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"feedIndex\": 0,\n    \"feedType\": \"manual\",\n    \"label\": \"Manual Feed 1\",\n    \"weight\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/oracle/feeds"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/oracle/feeds/:index - Get Single Feed",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/admin/oracle/feeds/0"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /admin/oracle/feeds/:index - Remove Feed",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/admin/oracle/feeds/0"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/oracle/crank - Crank Feed (Update Price)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"feedIndex\": 0,\n    \"price\": 1.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/oracle/crank"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/oracle/aggregate - Aggregate Prices",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"feedAccounts\": [\"FeedPDA1\", \"FeedPDA2\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/oracle/aggregate"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/oracle/manual-price - Set Manual Price Override",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"price\": 1.01,\n    \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/oracle/manual-price"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/oracle/price/mint - Get Mint Price",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/admin/oracle/price/mint"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/oracle/price/redeem - Get Redeem Price",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/admin/oracle/price/redeem"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /admin/oracle/close - Close Oracle",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/admin/oracle/close"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/oracle/authority/transfer - Transfer Oracle Authority (Step 1)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"newAuthority\": \"NewAuthorityPublicKey\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/oracle/authority/transfer"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/oracle/authority/accept - Accept Oracle Authority (Step 2)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/admin/oracle/authority/accept"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "POST /webhooks/subscribe - Subscribe to Events",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"url\": \"https://your-webhook-endpoint.com/webhook\",\n    \"events\": [\"*\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/webhooks/subscribe"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /webhooks/subscribe/:id - Unsubscribe",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/webhooks/subscribe/:id"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /webhooks/dispatch - Test Webhook Dispatch",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"event\": \"test\",\n    \"data\": { \"message\": \"Test webhook\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/webhooks/dispatch"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "GET /analytics - Get Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics?mint={{mint_address}}",
+              "host": ["{{base_url}}"],
+              "path": ["analytics"],
+              "query": [
+                {
+                  "key": "mint",
+                  "value": "{{mint_address}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "GET /dashboard/summary - Get Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/summary?mint={{mint_address}}",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "summary"],
+              "query": [
+                {
+                  "key": "mint",
+                  "value": "{{mint_address}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Token Accounts",
+      "item": [
+        {
+          "name": "GET /accounts/:address/balance - Get Token Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/accounts/:address/balance?mintAddress={{mint_address}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "accounts",
+                ":address",
+                "balance"
+              ],
+              "query": [
+                {
+                  "key": "mintAddress",
+                  "value": "{{mint_address}}"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "address",
+                  "value": "Enter_Account_PubKey"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mint_address",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "minter_address",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

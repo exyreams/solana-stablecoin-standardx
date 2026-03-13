@@ -1,0 +1,1 @@
+export { oracleCommand } from "./oracle";

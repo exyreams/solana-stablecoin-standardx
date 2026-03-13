@@ -1,0 +1,31 @@
+# Solana / Anchor
+.anchor/
+target/
+**/.DS_Store
+test-ledger/
+
+# Trident Fuzz Testing
+trident-tests/fuzz_tests/hfuzz_target/
+trident-tests/fuzz_tests/hfuzz_workspace/
+trident-tests/fuzz_tests/.crash/
+
+# Node / pnpm
+node_modules/
+dist/
+*.js.map
+*.d.ts.map
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.secret
+
+# Docker
+*.log
+docker-volumes/
+
+# Misc
+*.swp
+*.swo
+.vscode/

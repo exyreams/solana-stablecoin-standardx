@@ -1,0 +1,47 @@
+{
+  "name": "solana-stablecoin-standard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source SDK and standards for stablecoins on Solana",
+  "license": "MIT",
+  "scripts": {
+    "build": "pnpm --filter './packages/*' build",
+    "test": "anchor test",
+    "test:sdk": "pnpm --filter @stbr/sss-token-sdk test",
+    "test:cli": "pnpm --filter @stbr/sss-token-cli test",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "check": "biome check --write .",
+    "services:up": "docker compose up -d",
+    "services:down": "docker compose down"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.6",
+    "@types/chai": "^5.2.3",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.3.5",
+    "chai": "^6.2.2",
+    "mocha": "^11.7.5",
+    "prettier": "^3.8.1",
+    "ts-mocha": "^11.1.0",
+    "typescript": "^5.9.3"
+  },
+  "workspaces": [
+    "packages/*",
+    "services"
+  ],
+  "overrides": {
+    "ioredis": "5.10.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "ioredis": "5.10.0"
+    }
+  }
+}

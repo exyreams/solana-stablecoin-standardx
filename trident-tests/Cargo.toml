@@ -1,0 +1,25 @@
+[workspace]
+
+[package]
+name = "fuzz_tests"
+version = "0.1.0"
+description = "Created with Trident"
+edition = "2021"
+
+[dependencies]
+borsh = "1.5.3"
+
+[dependencies.trident-fuzz]
+version = "0.12.0"
+
+[[bin]]
+name = "fuzz_sss_token"
+path = "fuzz_sss_token/test_fuzz.rs"
+
+[[bin]]
+name = "fuzz_oracle"
+path = "fuzz_oracle/test_fuzz.rs"
+
+[[bin]]
+name = "fuzz_transfer_hook"
+path = "fuzz_transfer_hook/test_fuzz.rs"

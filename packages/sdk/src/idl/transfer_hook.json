@@ -1,0 +1,163 @@
+{
+	"address": "HPksBobjquMqBfnCgpqBQDkomJ4HmGB1AbvJnemNBEig",
+	"metadata": {
+		"name": "transfer_hook",
+		"version": "0.1.0",
+		"spec": "0.1.0",
+		"description": "SSS-2 transfer hook — enforces blacklist checks on every Token-2022 transfer"
+	},
+	"instructions": [
+		{
+			"name": "initialize_extra_account_meta_list",
+			"docs": [
+				"Called once after the SSS-2 mint is created.",
+				"Writes the ExtraAccountMetaList PDA so Token-2022 knows which extra",
+				"accounts to pass to the hook on every transfer."
+			],
+			"discriminator": [92, 197, 174, 197, 41, 124, 19, 3],
+			"accounts": [
+				{
+					"name": "payer",
+					"writable": true,
+					"signer": true
+				},
+				{
+					"name": "extra_account_meta_list",
+					"docs": [
+						"ExtraAccountMetaList PDA — tells Token-2022 which extra accounts",
+						"must be passed to this hook on every transfer.",
+						""
+					],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [
+									101, 120, 116, 114, 97, 45, 97, 99, 99, 111, 117, 110, 116,
+									45, 109, 101, 116, 97, 115
+								]
+							},
+							{
+								"kind": "account",
+								"path": "mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "mint"
+				},
+				{
+					"name": "sss_token_program",
+					"docs": [
+						"The sss-token program whose blacklist PDAs we need to resolve.",
+						"Token-2022 can derive blacklist PDAs owned by this program."
+					]
+				},
+				{
+					"name": "roles_config",
+					"docs": [
+						"The roles_config PDA from sss-token — used to verify the payer",
+						"is the master authority.  This prevents front-running attacks where",
+						"an adversary initializes the ExtraAccountMetaList with a wrong",
+						"sss_token_program before the legitimate admin does.",
+						"",
+						"with seeds [\"roles_config\", mint]) and raw data read for authority."
+					]
+				},
+				{
+					"name": "system_program",
+					"address": "11111111111111111111111111111111"
+				}
+			],
+			"args": []
+		},
+		{
+			"name": "transfer_hook",
+			"docs": [
+				"The actual transfer hook logic — checks blacklist entries.",
+				"Called internally by the fallback below; never called directly by clients."
+			],
+			"discriminator": [220, 57, 220, 152, 126, 125, 97, 168],
+			"accounts": [
+				{
+					"name": "source_token",
+					"docs": ["Source token account (index 0)."]
+				},
+				{
+					"name": "mint",
+					"docs": ["Mint (index 1)."]
+				},
+				{
+					"name": "destination_token",
+					"docs": ["Destination token account (index 2)."]
+				},
+				{
+					"name": "authority",
+					"docs": [
+						"Source token account authority — owner or delegate (index 3).",
+						"Used to detect permanent delegate (seize) operations."
+					]
+				},
+				{
+					"name": "extra_account_meta_list",
+					"docs": ["ExtraAccountMetaList PDA (index 4)."]
+				},
+				{
+					"name": "sss_token_program",
+					"docs": [
+						"The sss-token program (index 5, extra account #0).",
+						"Needed so Token-2022 can derive blacklist PDAs owned by sss-token.",
+						"Also used as the reference key for ownership checks on blacklist entries."
+					]
+				},
+				{
+					"name": "source_blacklist_entry",
+					"docs": [
+						"Blacklist entry PDA for the source wallet owner (index 6, extra account #1).",
+						"Derived as PDA of sss-token: [\"blacklist\", mint, source_owner]."
+					]
+				},
+				{
+					"name": "destination_blacklist_entry",
+					"docs": [
+						"Blacklist entry PDA for the destination wallet owner (index 7, extra account #2).",
+						"Derived as PDA of sss-token: [\"blacklist\", mint, dest_owner]."
+					]
+				},
+				{
+					"name": "stablecoin_state",
+					"docs": [
+						"The stablecoin_state PDA (index 8, extra account #3).",
+						"Used to identify permanent delegate (seize) operations.",
+						"If authority == stablecoin_state, blacklist checks are skipped."
+					]
+				}
+			],
+			"args": [
+				{
+					"name": "amount",
+					"type": "u64"
+				}
+			]
+		}
+	],
+	"errors": [
+		{
+			"code": 6000,
+			"name": "SourceBlacklisted",
+			"msg": "Transfer blocked: source address is blacklisted"
+		},
+		{
+			"code": 6001,
+			"name": "DestinationBlacklisted",
+			"msg": "Transfer blocked: destination address is blacklisted"
+		},
+		{
+			"code": 6002,
+			"name": "InvalidAuthority",
+			"msg": "Unauthorized: caller is not the stablecoin master authority"
+		}
+	]
+}

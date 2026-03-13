@@ -1,0 +1,1 @@
+export { privacyCommand } from "./privacy";

@@ -1,0 +1,29 @@
+[package]
+name = "sss-token"
+version = "0.1.0"
+description = "Solana Stablecoin Standard — main program (SSS-1, SSS-2, SSS-3)"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "sss_token"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+custom-heap = []
+custom-panic = []
+anchor-debug = []
+
+[dependencies]
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+anchor-spl = { version = "0.32.1", features = ["token_2022", "token_2022_extensions"] }
+blake3 = "=1.7.0"
+bytemuck = "1.25.0"
+spl-token-2022 = { version = "8.0.1", features = ["no-entrypoint"] }
+spl-token-metadata-interface = "0.7.0"
+mpl-token-metadata = "5.1.1"

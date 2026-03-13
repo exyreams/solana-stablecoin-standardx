@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# Node modules (rebuilt in Docker)
+node_modules
+**/node_modules
+
+# Build artifacts (rebuilt in Docker)
+**/dist
+**/.next
+**/build
+**/.turbo
+
+# Frontend / other packages (not needed for backend)
+apps/
+packages/web/
+
+# Prisma SQLite dev database
+services/dev.db
+
+# Misc
+**/*.log
+**/.env
+**/.DS_Store
+**/coverage
+**/.nyc_output
