@@ -3,8 +3,6 @@ use crate::events::FeedRemoved;
 use crate::state::*;
 use anchor_lang::prelude::*;
 
-// ── Accounts ───────────────────────────────────────────────
-
 #[derive(Accounts)]
 #[instruction(feed_index: u8)]
 pub struct RemoveFeed<'info> {
@@ -20,11 +18,7 @@ pub struct RemoveFeed<'info> {
     #[account(
         mut,
         close = authority,
-        seeds = [
-            PRICE_FEED_SEED,
-            oracle_config.key().as_ref(),
-            &[feed_index],
-        ],
+        seeds = [PRICE_FEED_SEED, oracle_config.key().as_ref(), &[feed_index]],
         bump = price_feed_entry.bump,
         constraint = price_feed_entry.oracle_config == oracle_config.key()
             @ OracleError::InvalidFeedAccount,
@@ -33,8 +27,6 @@ pub struct RemoveFeed<'info> {
 
     pub system_program: Program<'info, System>,
 }
-
-// ── Handler ────────────────────────────────────────────────
 
 pub fn handler(ctx: Context<RemoveFeed>, feed_index: u8) -> Result<()> {
     let cfg = &mut ctx.accounts.oracle_config;

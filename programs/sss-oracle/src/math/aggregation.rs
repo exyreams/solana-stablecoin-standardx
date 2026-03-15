@@ -1,9 +1,6 @@
 use crate::errors::OracleError;
 use anchor_lang::prelude::*;
 
-// ── Data types ─────────────────────────────────────────────
-
-/// Lightweight copy of the fields we care about during aggregation.
 #[derive(Clone, Copy)]
 pub struct FeedDataPoint {
     pub price: u64,
@@ -12,13 +9,10 @@ pub struct FeedDataPoint {
     pub weight: u16,
 }
 
-// ── Aggregation functions ──────────────────────────────────
-
 /// Median of a mutable slice (sorted in-place).
 pub fn compute_median(prices: &mut [u64]) -> Result<u64> {
     require!(!prices.is_empty(), OracleError::InsufficientFeeds);
     prices.sort_unstable();
-
     let len = prices.len();
     if len % 2 == 0 {
         let mid = len / 2;
@@ -31,10 +25,8 @@ pub fn compute_median(prices: &mut [u64]) -> Result<u64> {
     }
 }
 
-/// Simple arithmetic mean.
 pub fn compute_mean(prices: &[u64]) -> Result<u64> {
     require!(!prices.is_empty(), OracleError::InsufficientFeeds);
-
     let mut sum: u128 = 0;
     for &p in prices {
         sum = sum
@@ -44,15 +36,11 @@ pub fn compute_mean(prices: &[u64]) -> Result<u64> {
     Ok((sum / prices.len() as u128) as u64)
 }
 
-/// Weighted mean where each `weight` is in basis points.
-///
 /// `Σ(price_i × weight_i) / Σ(weight_i)`
 pub fn compute_weighted_mean(data: &[FeedDataPoint]) -> Result<u64> {
     require!(!data.is_empty(), OracleError::InsufficientFeeds);
-
     let mut weighted_sum: u128 = 0;
     let mut total_weight: u128 = 0;
-
     for d in data {
         let w = d.weight as u128;
         weighted_sum = weighted_sum
@@ -66,7 +54,6 @@ pub fn compute_weighted_mean(data: &[FeedDataPoint]) -> Result<u64> {
             .checked_add(w)
             .ok_or(OracleError::MathOverflow)?;
     }
-
     require!(total_weight > 0, OracleError::InsufficientFeeds);
     Ok((weighted_sum / total_weight) as u64)
 }
@@ -76,7 +63,6 @@ pub fn compute_aggregate_confidence(data: &[FeedDataPoint]) -> Result<u64> {
     if data.is_empty() {
         return Ok(0);
     }
-
     let mut sum_sq: u128 = 0;
     for d in data {
         let c = d.confidence as u128;
@@ -84,18 +70,15 @@ pub fn compute_aggregate_confidence(data: &[FeedDataPoint]) -> Result<u64> {
             .checked_add(c.checked_mul(c).ok_or(OracleError::MathOverflow)?)
             .ok_or(OracleError::MathOverflow)?;
     }
-
-    let mean_sq = sum_sq / data.len() as u128;
-    Ok(isqrt(mean_sq) as u64)
+    Ok(isqrt(sum_sq / data.len() as u128) as u64)
 }
 
-/// Verify that **every** pair of prices is within `threshold_bps` of each other.
+/// Returns `true` when every pair of prices is within `threshold_bps` of each other.
 pub fn check_deviation(prices: &[u64], threshold_bps: u16) -> Result<bool> {
     if prices.len() <= 1 {
         return Ok(true);
     }
     let threshold = threshold_bps as u128;
-
     for i in 0..prices.len() {
         for j in (i + 1)..prices.len() {
             let a = prices[i] as u128;
@@ -105,16 +88,13 @@ pub fn check_deviation(prices: &[u64], threshold_bps: u16) -> Result<bool> {
             }
             let diff = if a > b { a - b } else { b - a };
             let max_val = core::cmp::max(a, b);
-            let dev = diff * 10_000 / max_val;
-            if dev > threshold {
+            if diff * 10_000 / max_val > threshold {
                 return Ok(false);
             }
         }
     }
     Ok(true)
 }
-
-// ── Helpers ────────────────────────────────────────────────
 
 /// Integer square root via Newton's method.
 fn isqrt(n: u128) -> u128 {

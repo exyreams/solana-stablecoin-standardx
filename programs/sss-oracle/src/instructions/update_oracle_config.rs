@@ -3,8 +3,6 @@ use crate::events::{OracleConfigUpdated, OraclePauseStateChanged};
 use crate::state::OracleConfig;
 use anchor_lang::prelude::*;
 
-// ── Params ─────────────────────────────────────────────────
-
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct UpdateOracleConfigParams {
     pub max_staleness_seconds: Option<i64>,
@@ -17,10 +15,7 @@ pub struct UpdateOracleConfigParams {
     pub redeem_discount_bps: Option<i16>,
     pub cranker: Option<Pubkey>,
     pub paused: Option<bool>,
-    // Authority transfer removed — use transfer_oracle_authority instead.
 }
-
-// ── Accounts ───────────────────────────────────────────────
 
 #[derive(Accounts)]
 pub struct UpdateOracleConfig<'info> {
@@ -32,8 +27,6 @@ pub struct UpdateOracleConfig<'info> {
     )]
     pub oracle_config: Account<'info, OracleConfig>,
 }
-
-// ── Handler ────────────────────────────────────────────────
 
 pub fn handler(ctx: Context<UpdateOracleConfig>, params: UpdateOracleConfigParams) -> Result<()> {
     let cfg = &mut ctx.accounts.oracle_config;
@@ -72,7 +65,6 @@ pub fn handler(ctx: Context<UpdateOracleConfig>, params: UpdateOracleConfigParam
     if let Some(v) = params.paused {
         let previous = cfg.paused;
         cfg.paused = v;
-        // Emit a dedicated event when pause state actually changes.
         if v != previous {
             emit!(OraclePauseStateChanged {
                 oracle_config: cfg.key(),

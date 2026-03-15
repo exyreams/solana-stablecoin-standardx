@@ -4,17 +4,11 @@ use crate::math::fixed_point::apply_bps;
 use crate::state::OracleConfig;
 use anchor_lang::prelude::*;
 
-// ── Accounts ───────────────────────────────────────────────
-
 #[derive(Accounts)]
 pub struct GetMintPrice<'info> {
-    #[account(
-        constraint = !oracle_config.paused @ OracleError::OraclePaused,
-    )]
+    #[account(constraint = !oracle_config.paused @ OracleError::OraclePaused)]
     pub oracle_config: Account<'info, OracleConfig>,
 }
-
-// ── Handler ────────────────────────────────────────────────
 
 pub fn handler(ctx: Context<GetMintPrice>) -> Result<()> {
     let cfg = &ctx.accounts.oracle_config;
@@ -30,7 +24,6 @@ pub fn handler(ctx: Context<GetMintPrice>) -> Result<()> {
         premium_bps: cfg.mint_premium_bps,
     });
 
-    // Expose the result via return-data so CPI callers can read it.
     anchor_lang::solana_program::program::set_return_data(&mint_price.to_le_bytes());
 
     Ok(())

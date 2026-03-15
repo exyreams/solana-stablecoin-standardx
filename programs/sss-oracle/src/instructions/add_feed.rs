@@ -3,25 +3,20 @@ use crate::events::FeedAdded;
 use crate::state::*;
 use anchor_lang::prelude::*;
 
-// ── Params ─────────────────────────────────────────────────
-
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct AddFeedParams {
-    /// Slot in 0..MAX_FEEDS-1 — used as part of the PDA seed.
+    /// Index in 0..MAX_FEEDS-1 — used as part of the PDA seed.
     pub feed_index: u8,
     /// Source type (see FEED_TYPE_* constants).
     pub feed_type: u8,
-    /// On-chain feed address (Pubkey::default for manual/API).
+    /// On-chain feed address. Pubkey::default() for manual/API.
     pub feed_address: Pubkey,
-    /// Human-readable label.
     pub label: String,
     /// Weight for weighted-mean (bps; 10 000 = 1.0×).
     pub weight: u16,
-    /// Per-feed staleness override; 0 → use global.
+    /// 0 → use global max_staleness_seconds.
     pub max_staleness_override: i64,
 }
-
-// ── Accounts ───────────────────────────────────────────────
 
 #[derive(Accounts)]
 #[instruction(params: AddFeedParams)]
@@ -39,11 +34,7 @@ pub struct AddFeed<'info> {
         init,
         payer = authority,
         space = 8 + PriceFeedEntry::INIT_SPACE,
-        seeds = [
-            PRICE_FEED_SEED,
-            oracle_config.key().as_ref(),
-            &[params.feed_index],
-        ],
+        seeds = [PRICE_FEED_SEED, oracle_config.key().as_ref(), &[params.feed_index]],
         bump,
     )]
     pub price_feed_entry: Account<'info, PriceFeedEntry>,
@@ -51,12 +42,9 @@ pub struct AddFeed<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// ── Handler ────────────────────────────────────────────────
-
 pub fn handler(ctx: Context<AddFeed>, params: AddFeedParams) -> Result<()> {
     let cfg = &mut ctx.accounts.oracle_config;
 
-    // ── Validate ───────────────────────────────────────────
     require!(!cfg.paused, OracleError::OraclePaused);
     require!(
         params.feed_index < MAX_FEEDS,
@@ -70,9 +58,7 @@ pub fn handler(ctx: Context<AddFeed>, params: AddFeedParams) -> Result<()> {
     require!(params.feed_type <= 4, OracleError::InvalidParameter);
     require!(params.weight > 0, OracleError::InvalidParameter);
 
-    // ── Populate feed PDA ──────────────────────────────────
     let feed = &mut ctx.accounts.price_feed_entry;
-
     feed.oracle_config = cfg.key();
     feed.feed_index = params.feed_index;
     feed.feed_type = params.feed_type;
@@ -92,7 +78,6 @@ pub fn handler(ctx: Context<AddFeed>, params: AddFeedParams) -> Result<()> {
         .checked_add(1)
         .ok_or(OracleError::MathOverflow)?;
 
-    // ── Event ──────────────────────────────────────────────
     emit!(FeedAdded {
         oracle_config: cfg.key(),
         feed_entry: feed.key(),

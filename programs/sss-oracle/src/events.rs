@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 
-// ── Lifecycle ───────────────────────────────────────────────
 #[event]
 pub struct OracleInitialized {
     pub oracle_config: Pubkey,
@@ -21,8 +20,6 @@ pub struct OracleClosed {
     pub oracle_config: Pubkey,
     pub authority: Pubkey,
 }
-
-// ── Authority transfer ─────────────────────────────────────
 
 #[event]
 pub struct OracleAuthorityTransferInitiated {
@@ -47,8 +44,6 @@ pub struct OracleAuthorityTransferCancelled {
     pub timestamp: i64,
 }
 
-// ── Pause ──────────────────────────────────────────────────
-
 #[event]
 pub struct OraclePauseStateChanged {
     pub oracle_config: Pubkey,
@@ -57,7 +52,6 @@ pub struct OraclePauseStateChanged {
     pub timestamp: i64,
 }
 
-// ── Feed management ────────────────────────────────────────
 #[event]
 pub struct FeedAdded {
     pub oracle_config: Pubkey,
@@ -82,7 +76,6 @@ pub struct FeedCranked {
     pub timestamp: i64,
 }
 
-// ── Price ──────────────────────────────────────────────────
 #[event]
 pub struct ManualPriceSet {
     pub oracle_config: Pubkey,
