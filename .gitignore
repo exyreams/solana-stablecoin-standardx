@@ -4,6 +4,9 @@ target/
 **/.DS_Store
 test-ledger/
 
+# Auto-generated IDLs — run `anchor build` then `pnpm build` to regenerate
+packages/sdk/src/idl/*.json
+
 # Trident Fuzz Testing
 trident-tests/hfuzz_target/
 trident-tests/hfuzz_workspace/
