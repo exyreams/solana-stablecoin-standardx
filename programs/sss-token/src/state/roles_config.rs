@@ -5,19 +5,15 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(Default)]
 pub struct RolesConfig {
-    /// Full control. Can update all other roles and transfer itself.
     pub master_authority: Pubkey,
     /// Pending new master (two-step transfer pattern).
     pub pending_master: Option<Pubkey>,
-    /// Can call burn instruction.
     pub burner: Pubkey,
-    /// Can call pause/unpause.
     pub pauser: Pubkey,
     /// SSS-2: can add/remove blacklist entries.
     pub blacklister: Pubkey,
     /// SSS-2: can call seize instruction.
     pub seizer: Pubkey,
-    /// PDA bump.
     pub bump: u8,
 }
 

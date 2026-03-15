@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum SssError {
-    // ── Auth ────────────────────────────────────────────────────────────────
     #[msg("Caller is not the master authority")]
     Unauthorized,
     #[msg("Caller is not the designated minter")]
@@ -15,8 +14,6 @@ pub enum SssError {
     NotBlacklister,
     #[msg("Caller is not the designated seizer")]
     NotSeizer,
-
-    // ── State ────────────────────────────────────────────────────────────────
     #[msg("Stablecoin is paused — minting and burning are disabled")]
     Paused,
     #[msg("Stablecoin is already paused")]
@@ -31,8 +28,6 @@ pub enum SssError {
     NoPendingMaster,
     #[msg("Caller is not the pending master authority")]
     NotPendingMaster,
-
-    // ── SSS-2 ────────────────────────────────────────────────────────────────
     #[msg("SSS-2 compliance module not enabled on this mint")]
     ComplianceNotEnabled,
     #[msg("Address is already on the blacklist")]
@@ -41,14 +36,10 @@ pub enum SssError {
     NotBlacklisted,
     #[msg("Target account is blacklisted and cannot receive transfers")]
     BlacklistedAccount,
-
-    // ── SSS-3 ────────────────────────────────────────────────────────────────
     #[msg("Requested feature is not enabled on this mint")]
     FeatureNotEnabled,
     #[msg("Invalid ElGamal public key")]
     InvalidElGamalPubkey,
-
-    // ── Validation ───────────────────────────────────────────────────────────
     #[msg("Amount must be greater than zero")]
     ZeroAmount,
     #[msg("Name too long — maximum 32 characters")]

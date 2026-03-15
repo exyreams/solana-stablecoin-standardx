@@ -60,11 +60,8 @@ pub fn handler(ctx: Context<Burn>, amount: u64) -> Result<()> {
     );
     spl_burn(cpi_ctx, amount)?;
 
-    // Sync total_supply with the actual on-chain mint supply after the burn.
-    // This approach keeps total_supply accurate even if tokens were previously
-    // burned directly via Token-2022 (bypassing this program).  The CPI above
-    // already validates that the account holds enough tokens, so an explicit
-    // checked_sub is unnecessary.
+    // Sync total_supply from the actual mint — stays accurate even if tokens
+    // were previously burned directly via Token-2022 outside this program.
     ctx.accounts.mint.reload()?;
     state.total_supply = ctx.accounts.mint.supply;
 

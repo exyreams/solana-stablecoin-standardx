@@ -10,10 +10,8 @@ use crate::{
 };
 
 /// Approve a token account for confidential transfers.
-/// Only the CT authority (stablecoin_state PDA) can approve accounts
-/// when auto_approve is disabled.
-///
-/// The master_authority triggers this instruction; the PDA signs the CPI.
+/// The stablecoin_state PDA is the CT authority — it signs the CPI.
+/// The master_authority triggers this instruction when auto_approve is disabled.
 #[derive(Accounts)]
 pub struct ApproveAccount<'info> {
     #[account(mut)]
@@ -51,18 +49,15 @@ pub fn handler(ctx: Context<ApproveAccount>) -> Result<()> {
     let mint_key = ctx.accounts.mint.key();
     let token_program_id = ctx.accounts.token_program.key();
 
-    // The stablecoin_state PDA is the CT authority — it must sign.
     let bump = ctx.accounts.stablecoin_state.bump;
     let signer_seeds: &[&[&[u8]]] = &[&[b"stablecoin_state", mint_key.as_ref(), &[bump]]];
 
-    // Build the approve_account instruction.
-    // The 5th argument is multisig signers — empty slice for PDA signing.
     let ix = confidential_transfer::instruction::approve_account(
         &token_program_id,
         &token_account_key,
         &mint_key,
-        &ctx.accounts.stablecoin_state.key(), // CT authority = PDA
-        &[],                                  // no multisig signers
+        &ctx.accounts.stablecoin_state.key(),
+        &[], // no multisig signers
     )?;
 
     invoke_signed(
@@ -75,12 +70,11 @@ pub fn handler(ctx: Context<ApproveAccount>) -> Result<()> {
         signer_seeds,
     )?;
 
-    let clock = Clock::get()?;
     emit!(AccountApprovedForConfidentialTransfer {
         token_account: token_account_key,
         mint: mint_key,
         authority: authority_key,
-        timestamp: clock.unix_timestamp,
+        timestamp: Clock::get()?.unix_timestamp,
     });
 
     Ok(())

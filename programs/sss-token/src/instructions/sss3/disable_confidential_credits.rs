@@ -50,12 +50,11 @@ pub fn handler(ctx: Context<DisableConfidentialCredits>) -> Result<()> {
         ],
     )?;
 
-    let clock = Clock::get()?;
     emit!(ConfidentialCreditsDisabled {
         token_account: token_account_key,
         owner: owner_key,
         mint: ctx.accounts.stablecoin_state.mint,
-        timestamp: clock.unix_timestamp,
+        timestamp: Clock::get()?.unix_timestamp,
     });
 
     Ok(())

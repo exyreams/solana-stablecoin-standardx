@@ -1,13 +1,3 @@
-//! Instruction handlers organized by category.
-//!
-//! ## Structure
-//! - `core/` - Core SSS-1 operations (initialize, mint, burn, supply)
-//! - `account/` - Account management (freeze, thaw)
-//! - `admin/` - Administrative operations (pause, roles, authority transfer)
-//! - `minter/` - Minter management (add, remove, update quotas)
-//! - `sss2/` - SSS-2 compliance features (blacklist, seize)
-//! - `sss3/` - SSS-3 privacy features (confidential transfers, allowlists)
-
 #![allow(ambiguous_glob_reexports)]
 
 pub mod account;

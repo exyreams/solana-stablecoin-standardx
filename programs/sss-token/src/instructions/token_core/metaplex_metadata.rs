@@ -18,8 +18,8 @@ pub struct MetaplexMetadata<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    /// The mint keypair must sign to create Metaplex metadata for Token-2022 mints.
-    /// This is a Metaplex requirement when the mint authority is a PDA.
+    /// The mint keypair must sign — Metaplex requirement for Token-2022 mints
+    /// when the mint authority is a PDA.
     #[account(mut, signer)]
     pub mint: Signer<'info>,
 
@@ -50,24 +50,21 @@ pub fn handler(ctx: Context<MetaplexMetadata>, config: MetaplexMetadataConfig) -
     require!(config.symbol.len() <= 10, SssError::SymbolTooLong);
     require!(config.uri.len() <= 200, SssError::UriTooLong);
 
-    // Note: Metaplex Token Metadata requires that Token-2022 mints do NOT have
-    // a close authority extension enabled. If your mint was initialized with
-    // MintCloseAuthority, you must close/disable it before calling this instruction.
-    // This is a Metaplex validation, not an SSS limitation.
+    // Metaplex requires Token-2022 mints to NOT have MintCloseAuthority enabled.
+    // If the mint was initialized with that extension, disable it before calling this.
 
-    // Create Metaplex metadata account via CPI
     CreateV1CpiBuilder::new(&ctx.accounts.token_metadata_program.to_account_info())
         .metadata(&ctx.accounts.metadata.to_account_info())
-        .mint(&ctx.accounts.mint.to_account_info(), true) // true = mint is signer
-        .authority(&ctx.accounts.stablecoin_state.to_account_info()) // PDA is mint authority
+        .mint(&ctx.accounts.mint.to_account_info(), true)
+        .authority(&ctx.accounts.stablecoin_state.to_account_info())
         .payer(&ctx.accounts.authority.to_account_info())
-        .update_authority(&ctx.accounts.stablecoin_state.to_account_info(), false) // PDA as update authority
+        .update_authority(&ctx.accounts.stablecoin_state.to_account_info(), false)
         .sysvar_instructions(&ctx.accounts.sysvar_instructions.to_account_info())
         .system_program(&ctx.accounts.system_program.to_account_info())
         .name(config.name)
         .symbol(config.symbol)
         .uri(config.uri)
-        .seller_fee_basis_points(0) // No royalties for stablecoins
+        .seller_fee_basis_points(0)
         .token_standard(TokenStandard::Fungible)
         .print_supply(PrintSupply::Zero)
         .is_mutable(true)

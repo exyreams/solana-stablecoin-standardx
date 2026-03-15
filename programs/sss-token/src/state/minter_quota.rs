@@ -5,18 +5,13 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(Default)]
 pub struct MinterQuota {
-    /// The mint this quota applies to.
     pub mint: Pubkey,
-    /// The minter keypair this quota belongs to.
     pub minter: Pubkey,
-    /// Maximum tokens this minter can mint in a rolling period.
-    /// 0 = unlimited.
+    /// Maximum tokens this minter can mint. 0 = unlimited.
     pub quota: u64,
-    /// Total amount minted so far (resets on update_minter call).
+    /// Running total minted (resets on update_minter call).
     pub minted: u64,
-    /// Whether this minter is currently active.
     pub active: bool,
-    /// PDA bump.
     pub bump: u8,
 }
 

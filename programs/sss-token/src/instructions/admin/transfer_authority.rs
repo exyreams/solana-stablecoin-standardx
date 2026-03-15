@@ -22,14 +22,9 @@ pub struct TransferAuthority<'info> {
 
 /// Two-step authority transfer with cancel support.
 ///
-/// **Step 1 — Initiate:** Current master calls with `new_master = Some(pubkey)`.
-///   Sets `pending_master`.
-///
-/// **Cancel:** Current master calls with `new_master = None`.
-///   Clears `pending_master`.
-///
-/// **Step 2 — Accept:** Pending master calls (any `new_master` value).
-///   Finalizes the transfer.
+/// Step 1 — Initiate: current master calls with `new_master = Some(pubkey)`.
+/// Cancel: current master calls with `new_master = None`.
+/// Step 2 — Accept: pending master calls (any `new_master` value).
 pub fn handler(ctx: Context<TransferAuthority>, new_master: Option<Pubkey>) -> Result<()> {
     let roles = &mut ctx.accounts.roles_config;
     let caller = ctx.accounts.caller.key();
@@ -39,7 +34,6 @@ pub fn handler(ctx: Context<TransferAuthority>, new_master: Option<Pubkey>) -> R
     if caller == roles.master_authority {
         match new_master {
             Some(proposed) => {
-                // Step 1: Initiate transfer
                 roles.pending_master = Some(proposed);
                 emit!(AuthorityTransferInitiated {
                     mint,
@@ -49,13 +43,10 @@ pub fn handler(ctx: Context<TransferAuthority>, new_master: Option<Pubkey>) -> R
                 });
             }
             None => {
-                // Cancel: Clear pending transfer
                 roles.pending_master = None;
-                // Optionally emit a cancellation event here
             }
         }
     } else if roles.pending_master == Some(caller) {
-        // Step 2: Accept
         roles.master_authority = caller;
         roles.pending_master = None;
         emit!(AuthorityTransferCompleted {

@@ -11,17 +11,15 @@ pub struct GetSupply<'info> {
     )]
     pub stablecoin_state: Account<'info, StablecoinState>,
 
-    /// The mint account — supply is read directly from on-chain data
-    /// rather than the program-tracked counter, ensuring accuracy even
-    /// if tokens were burned directly via Token-2022.
+    /// Supply is read directly from the mint account — accurate even if tokens
+    /// were burned directly via Token-2022 outside this program.
     #[account(
         constraint = mint.key() == stablecoin_state.mint @ SssError::InvalidMint,
     )]
     pub mint: InterfaceAccount<'info, Mint>,
 }
 
-/// Returns the current total supply by reading the actual mint account.
-/// This is a view-only instruction that doesn't modify state.
+/// View-only instruction — returns the current total supply from the mint account.
 pub fn handler(ctx: Context<GetSupply>) -> Result<u64> {
     Ok(ctx.accounts.mint.supply)
 }

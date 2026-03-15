@@ -14,25 +14,23 @@ declare_id!("HPksBobjquMqBfnCgpqBQDkomJ4HmGB1AbvJnemNBEig");
 pub mod transfer_hook {
     use super::*;
 
-    /// Called once after the SSS-2 mint is created.
-    /// Writes the ExtraAccountMetaList PDA so Token-2022 knows which extra
-    /// accounts to pass to the hook on every transfer.
+    /// Called once after the SSS-2 mint is created. Writes the ExtraAccountMetaList
+    /// PDA so Token-2022 knows which extra accounts to pass to the hook on every transfer.
     pub fn initialize_extra_account_meta_list(
         ctx: Context<InitializeExtraAccountMetaList>,
     ) -> Result<()> {
         crate::initialize_extra_account_meta_list::initialize_handler(ctx)
     }
 
-    /// The actual transfer hook logic — checks blacklist entries.
+    /// Transfer hook logic — checks blacklist entries.
     /// Called internally by the fallback below; never called directly by clients.
     pub fn transfer_hook(ctx: Context<Execute>, amount: u64) -> Result<()> {
         crate::execute::execute_handler(ctx, amount)
     }
 
     /// Token-2022 invokes the transfer hook using the SPL interface discriminator,
-    /// not Anchor's instruction discriminator. When no Anchor instruction matches,
-    /// Anchor calls this fallback. We parse the SPL instruction and route it
-    /// to our transfer_hook handler above.
+    /// not Anchor's. When no Anchor instruction matches, Anchor calls this fallback,
+    /// which parses the SPL instruction and routes it to the transfer_hook handler.
     pub fn fallback<'info>(
         program_id: &Pubkey,
         accounts: &'info [AccountInfo<'info>],

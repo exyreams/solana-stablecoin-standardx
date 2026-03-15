@@ -42,7 +42,6 @@ pub fn handler(ctx: Context<ThawAccount>) -> Result<()> {
         SssError::Unauthorized
     );
 
-    // Use PDA signing for freeze authority
     let mint_key = ctx.accounts.mint.key();
     let bump = state.bump;
     let signer_seeds: &[&[&[u8]]] = &[&[b"stablecoin_state", mint_key.as_ref(), &[bump]]];
@@ -52,7 +51,7 @@ pub fn handler(ctx: Context<ThawAccount>) -> Result<()> {
         SplThawAccount {
             account: ctx.accounts.target_account.to_account_info(),
             mint: ctx.accounts.mint.to_account_info(),
-            authority: ctx.accounts.stablecoin_state.to_account_info(), // PDA signs
+            authority: ctx.accounts.stablecoin_state.to_account_info(),
         },
         signer_seeds,
     );

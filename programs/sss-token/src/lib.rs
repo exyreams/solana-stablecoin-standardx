@@ -33,25 +33,12 @@ declare_id!("GQp6UgyhLZP6zXRf24JH2BiwuoSAfYZruJ3WUPkqgj8X");
 pub mod sss_token {
     use super::*;
 
-    // ── Core ─────────────────────────────────────────────────────────────────
-
     pub fn initialize(ctx: Context<Initialize>, config: StablecoinConfig) -> Result<()> {
         instructions::token_core::initialize::handler(ctx, config)
     }
 
-    /// Create Metaplex Token Metadata for wallet and explorer compatibility.
-    ///
-    /// Must be called in a **separate transaction** after `initialize`.
-    /// This creates a Metaplex metadata PDA that wallets like Phantom can read.
-    ///
-    /// **IMPORTANT:** The mint keypair must sign this transaction. Call this
-    /// immediately after `initialize` before discarding the mint keypair.
-    ///
-    /// **NOTE:** The mint must be initialized WITHOUT `enable_mint_close_authority`
-    /// for Metaplex compatibility. Metaplex Token Metadata does not support
-    /// Token-2022 mints with close authority.
-    ///
-    /// Can only be called once — Metaplex rejects duplicate metadata creation.
+    /// Create Metaplex Token Metadata. Must be called in a separate transaction
+    /// after `initialize`. The mint keypair must sign. Can only be called once.
     pub fn metaplex_metadata(
         ctx: Context<MetaplexMetadata>,
         config: MetaplexMetadataConfig,
@@ -75,8 +62,6 @@ pub mod sss_token {
         instructions::token_core::close_mint::handler(ctx)
     }
 
-    // ── Account ───────────────────────────────────────────────────────────────
-
     pub fn freeze_account(ctx: Context<FreezeAccount>) -> Result<()> {
         instructions::account::freeze_account::handler(ctx)
     }
@@ -84,8 +69,6 @@ pub mod sss_token {
     pub fn thaw_account(ctx: Context<ThawAccount>) -> Result<()> {
         instructions::account::thaw_account::handler(ctx)
     }
-
-    // ── Admin ─────────────────────────────────────────────────────────────────
 
     pub fn pause(ctx: Context<Pause>, reason: Option<String>) -> Result<()> {
         instructions::admin::pause::handler(ctx, reason)
@@ -106,8 +89,6 @@ pub mod sss_token {
         instructions::admin::transfer_authority::handler(ctx, new_master)
     }
 
-    // ── Minter ────────────────────────────────────────────────────────────────
-
     pub fn add_minter(ctx: Context<AddMinter>, quota: u64) -> Result<()> {
         instructions::minter::add_minter::handler(ctx, quota)
     }
@@ -125,8 +106,6 @@ pub mod sss_token {
         instructions::minter::update_minter::handler(ctx, quota, active, reset_minted)
     }
 
-    // ── SSS-2 ─────────────────────────────────────────────────────────────────
-
     pub fn add_to_blacklist(ctx: Context<AddToBlacklist>, reason: String) -> Result<()> {
         instructions::sss2::add_to_blacklist::handler(ctx, reason)
     }
@@ -138,8 +117,6 @@ pub mod sss_token {
     pub fn seize<'info>(ctx: Context<'_, '_, '_, 'info, Seize<'info>>, amount: u64) -> Result<()> {
         instructions::sss2::seize::handler(ctx, amount)
     }
-
-    // ── SSS-3 ─────────────────────────────────────────────────────────────────
 
     pub fn approve_account(ctx: Context<ApproveAccount>) -> Result<()> {
         instructions::sss3::approve_account::handler(ctx)

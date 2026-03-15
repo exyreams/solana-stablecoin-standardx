@@ -10,21 +10,22 @@ use crate::{
 
 /// Permanently close the mint account and reclaim all rent.
 ///
-/// This closes three accounts:
+/// Closes three accounts:
 /// 1. The Token-2022 mint (via MintCloseAuthority CPI, signed by PDA)
-/// 2. The `stablecoin_state` PDA (via Anchor `close` constraint)
-/// 3. The `roles_config` PDA (via Anchor `close` constraint)
+/// 2. `stablecoin_state` PDA (via Anchor `close` constraint)
+/// 3. `roles_config` PDA (via Anchor `close` constraint)
 ///
-/// **Prerequisites:**
-/// - Total supply must be zero (all tokens burned).
-/// - All `MinterQuota` PDAs should be removed first via `remove_minter`.
-///   Orphaned quota PDAs will be unusable but their rent will be stuck.
+/// Prerequisites: total supply must be zero; all MinterQuota PDAs should be
+/// removed first via `remove_minter` (orphaned quotas will be unusable with
+/// rent stuck).
 ///
-/// **This is irreversible.** Once closed, the mint cannot be recreated
-/// at the same address.
+/// If the mint was initialized without MintCloseAuthority (for Metaplex
+/// compatibility), this instruction will fail — the mint cannot be closed.
+///
+/// This is irreversible.
 #[derive(Accounts)]
 pub struct CloseMint<'info> {
-    /// Must be master authority.  Also receives all reclaimed rent.
+    /// Must be master authority. Also receives all reclaimed rent.
     #[account(mut)]
     pub authority: Signer<'info>,
 
@@ -67,12 +68,7 @@ pub fn handler(ctx: Context<CloseMint>) -> Result<()> {
     let bump = ctx.accounts.stablecoin_state.bump;
     let signer_seeds: &[&[&[u8]]] = &[&[b"stablecoin_state", mint_key.as_ref(), &[bump]]];
 
-    // Close the Token-2022 mint account via MintCloseAuthority (if enabled).
-    // The stablecoin_state PDA is the MintCloseAuthority — it signs via PDA seeds.
-    // Rent lamports from the mint account go to the authority.
-    //
-    // Note: If the mint was initialized without MintCloseAuthority (for Metaplex
-    // compatibility), this will fail. In that case, the mint cannot be closed.
+    // stablecoin_state PDA is the MintCloseAuthority — signs via PDA seeds.
     let ix = spl_token_2022::instruction::close_account(
         &ctx.accounts.token_program.key(),
         &mint_key,
@@ -98,7 +94,6 @@ pub fn handler(ctx: Context<CloseMint>) -> Result<()> {
         timestamp: Clock::get()?.unix_timestamp,
     });
 
-    // stablecoin_state and roles_config are closed via Anchor's
-    // `close = authority` constraint — rent returned to authority.
+    // stablecoin_state and roles_config are closed via Anchor's `close = authority` constraint.
     Ok(())
 }

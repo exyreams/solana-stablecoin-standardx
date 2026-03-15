@@ -19,7 +19,6 @@ pub struct StablecoinConfig {
     pub symbol: String,
     pub uri: String,
     pub decimals: u8,
-    // Core features
     pub enable_mint_close_authority: bool,
     // SSS-2 features
     pub enable_permanent_delegate: bool,
@@ -29,8 +28,7 @@ pub struct StablecoinConfig {
     // SSS-3 features
     pub enable_confidential_transfers: bool,
     pub confidential_transfer_auto_approve: bool,
-    /// Optional auditor ElGamal public key for confidential transfers.
-    /// If provided, the auditor can decrypt all confidential transfer amounts.
+    /// Optional auditor ElGamal pubkey — allows the auditor to decrypt all CT amounts.
     pub auditor_elgamal_pubkey: Option<[u8; 32]>,
 }
 
@@ -87,15 +85,15 @@ pub fn handler(ctx: Context<Initialize>, config: StablecoinConfig) -> Result<()>
     let state_pda = ctx.accounts.stablecoin_state.key();
     let stablecoin_bump = ctx.bumps.stablecoin_state;
 
-    // ── Build extension list ─────────────────────────────────────────────
+    // Build extension list — order matters; all extensions must be initialized
+    // before initialize_mint2.
     let mut extensions = vec![];
 
-    // MintCloseAuthority conflicts with Metaplex Token Metadata
-    // Only enable if explicitly requested AND not planning to use Metaplex
+    // MintCloseAuthority conflicts with Metaplex Token Metadata — only enable
+    // if explicitly requested and Metaplex is not needed.
     if config.enable_mint_close_authority {
         extensions.push(ExtensionType::MintCloseAuthority);
     }
-
     if config.enable_permanent_delegate {
         extensions.push(ExtensionType::PermanentDelegate);
     }
@@ -109,7 +107,6 @@ pub fn handler(ctx: Context<Initialize>, config: StablecoinConfig) -> Result<()>
         extensions.push(ExtensionType::ConfidentialTransferMint);
     }
 
-    // ── Create mint account with space for all extensions ────────────────
     let space = ExtensionType::try_calculate_account_len::<SplMint>(&extensions)
         .map_err(|_| SssError::Overflow)?;
     let lamports = Rent::get()?.minimum_balance(space);
@@ -127,11 +124,6 @@ pub fn handler(ctx: Context<Initialize>, config: StablecoinConfig) -> Result<()>
         &token_program_id,
     )?;
 
-    // ── Initialize all extensions BEFORE initialize_mint2 ────────────────
-
-    // MintCloseAuthority — set to PDA so only the program can close the
-    // mint (requires zero supply). Only enabled if requested.
-    // Note: This conflicts with Metaplex Token Metadata.
     if config.enable_mint_close_authority {
         invoke(
             &token_instruction::initialize_mint_close_authority(
@@ -167,8 +159,8 @@ pub fn handler(ctx: Context<Initialize>, config: StablecoinConfig) -> Result<()>
 
     if config.enable_transfer_hook {
         let hook_program_id = config.transfer_hook_program_id.unwrap();
-        // Transfer hook authority set to PDA — only the program can
-        // update the hook program ID in the future (via a new instruction).
+        // Transfer hook authority set to PDA — only the program can update the
+        // hook program ID in the future.
         invoke(
             &spl_token_2022::extension::transfer_hook::instruction::initialize(
                 &token_program_id,
@@ -180,7 +172,6 @@ pub fn handler(ctx: Context<Initialize>, config: StablecoinConfig) -> Result<()>
         )?;
     }
 
-    // ── SSS-3: Initialize confidential transfer mint extension ───────────
     if config.enable_confidential_transfers {
         use spl_token_2022::solana_zk_sdk::encryption::pod::elgamal::PodElGamalPubkey;
 
@@ -200,7 +191,7 @@ pub fn handler(ctx: Context<Initialize>, config: StablecoinConfig) -> Result<()>
         )?;
     }
 
-    // ── Initialize the mint itself (MUST come after all extensions) ──────
+    // initialize_mint2 MUST come after all extension initializations.
     invoke(
         &token_instruction::initialize_mint2(
             &token_program_id,
@@ -212,32 +203,10 @@ pub fn handler(ctx: Context<Initialize>, config: StablecoinConfig) -> Result<()>
         &[ctx.accounts.mint.to_account_info()],
     )?;
 
-    // ── Token metadata initialization ─────────────────────────────────────
-    // NOTE: On-mint Token-2022 metadata initialization via CPI is not supported
-    // due to Solana's realloc limitations in CPI context. The MetadataPointer
-    // extension is configured to point to the mint, but the actual metadata
-    // fields remain uninitialized.
-    //
-    // Metadata is stored in the StablecoinState PDA and can be queried from there.
-    // Wallets and explorers that need to display token information should read
-    // from the StablecoinState account.
-    //
-    // The separate `initialize_metadata` instruction exists for API compatibility
-    // but is currently a no-op due to this Solana limitation.
+    // On-mint Token-2022 metadata via CPI is not supported due to Solana's
+    // realloc limits in CPI context. Call the separate `initialize_metadata`
+    // instruction in a subsequent transaction instead.
 
-    // ── Token metadata initialization ─────────────────────────────────────
-    // Metadata is NOT initialized here to avoid the "Failed to reallocate
-    // account data" error that occurs when reallocating within the same
-    // transaction as mint creation.
-    //
-    // Instead, call the separate `initialize_metadata` instruction in a
-    // subsequent transaction after this `initialize` completes.
-    //
-    // The MetadataPointer extension (initialized above) points to the mint
-    // account, but the actual metadata fields remain empty until
-    // `initialize_metadata` is called.
-
-    // ── Persist state ────────────────────────────────────────────────────
     let state = &mut ctx.accounts.stablecoin_state;
     state.version = StablecoinState::CURRENT_VERSION;
     state.mint = mint_key;
